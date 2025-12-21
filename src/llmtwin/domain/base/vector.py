@@ -1,5 +1,5 @@
 from xml.dom.minidom import Document
-from .connection import QdrantConnection
+from ...connection import QdrantConnection
 from pydantic import BaseModel, UUID4, Field
 from abc import ABC, abstractmethod
 from typing import Type, Generic, TypeVar

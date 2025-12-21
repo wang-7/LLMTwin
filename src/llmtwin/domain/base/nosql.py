@@ -2,8 +2,8 @@ from typing import TypeVar, Generic, Type
 from pydantic import BaseModel
 from pymongo.results import InsertOneResult, InsertManyResult
 from abc import ABC, abstractmethod
-from .connection import MongoDBConnection
-from .settings import settings
+from ...connection import MongoDBConnection
+from ...settings import settings
 
 _database = MongoDBConnection().get_database(settings.DATABASE_NAME)
 
