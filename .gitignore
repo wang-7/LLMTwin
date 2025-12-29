@@ -2,6 +2,12 @@
 mongo-data/
 qdrant_storage/
 
+
+# Unsloth files
+unsloth_compiled_cache/
+_unsloth_sentencepiece_temp/
+trainer_output/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
