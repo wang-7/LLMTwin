@@ -8,8 +8,9 @@ import uuid
 from uuid import UUID
 
 from qdrant_client.http import exceptions
-from qdrant_client.http.models import Distance, VectorParams
+from qdrant_client.http.models import Distance, VectorParams, UpdateResult
 from qdrant_client.models import CollectionInfo, PointStruct, Record
+
 
 _database = QdrantConnection()
 
@@ -23,6 +24,11 @@ class VectorBaseDocument(BaseModel, Generic[T], ABC):
     @classmethod
     @abstractmethod
     def get_collection_name(cls: Type[T]):
+        pass
+
+    @classmethod
+    @abstractmethod
+    def get_category(cls: Type[T]):
         pass
 
     @classmethod
@@ -55,15 +61,15 @@ class VectorBaseDocument(BaseModel, Generic[T], ABC):
         return PointStruct(id=_id, vector=vector, payload=attributes)
     
     @classmethod
-    def bulk_insert(cls: Type[T], documents: list[T]) -> bool:
+    def bulk_insert(cls: Type[T], documents: list[T]) -> UpdateResult:
         collection_name = cls.get_collection_name()
         points = [doc.to_point() for doc in documents]
 
-        _database.upsert(
+        result = _database.upsert(
             collection_name=collection_name,
             points=points,
         )
-        return True
+        return result
     
     @classmethod
     def bulk_find(cls: Type[T], limit: int=10, **kwargs) -> tuple[list[T], UUID4 | None]:
@@ -101,3 +107,42 @@ class VectorBaseDocument(BaseModel, Generic[T], ABC):
 
         documents = [cls.from_record(doc) for doc in results.points]
         return documents
+    
+    
+    @classmethod
+    def get_or_create_collection(cls: Type[T], vector_size: int | None = None, use_vector_index: bool = True) -> CollectionInfo:
+        collection_name = cls.get_collection_name()
+
+        try:
+            return _database.get_collection(collection_name=collection_name)
+        except exceptions.UnexpectedResponse:
+            # use_vector_index = cls.get_use_vector_index()
+
+            collection_created = cls._create_collection(
+                collection_name=collection_name, vector_size=vector_size, use_vector_index=use_vector_index
+            )
+            if collection_created is False:
+                raise RuntimeError(f"Couldn't create collection {collection_name}") from None
+
+            return _database.get_collection(collection_name=collection_name)
+
+    @classmethod
+    def create_collection(cls: Type[T], vector_size: int, use_vector_index: bool = True) -> bool:
+        collection_name = cls.get_collection_name()
+        # use_vector_index = cls.get_use_vector_index()
+
+        return cls._create_collection(collection_name=collection_name, vector_size=vector_size, use_vector_index=use_vector_index)
+
+    @classmethod
+    def _create_collection(cls, collection_name: str, vector_size: int, use_vector_index: bool = True) -> bool:
+        if use_vector_index is True:
+            assert vector_size is not None, "vector_size must be provided when use_vector_index is True."
+            vectors_config = VectorParams(size=vector_size, distance=Distance.COSINE)
+        else:
+            vectors_config = {}
+
+        return _database.create_collection(collection_name=collection_name, vectors_config=vectors_config)
+    
+    @classmethod
+    def get_use_vector_index(cls: Type[T]) -> bool:
+        return 

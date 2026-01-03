@@ -6,10 +6,11 @@ qdrant_url = "http://localhost:6333"
 
 class MongoDBConnection:
     _instance = None
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls,*args, **kwargs):
         if cls._instance is None:
             try:
-                cls._instance = MongoClient(mongo_uri, connect=True)
+                # print(kwargs)
+                cls._instance = MongoClient(mongo_uri, connect=True, **kwargs)
             except Exception as e:
                 print(f'Exception {e} occurred when connecting to MongoDB.')
         return cls._instance

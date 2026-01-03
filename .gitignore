@@ -112,8 +112,9 @@ Pipfile
 __pypackages__/
 
 # uv (modern Python tool)
-.venv/          # uv 默认虚拟环境目录
-uv.lock         # 注意：uv.lock 应该提交！所以这里不忽略
+# uv 默认虚拟环境目录
+.venv/          
+# uv.lock         # 注意：uv.lock 应该提交！所以这里不忽略
 # 如果你用自定义 venv 路径，可添加：
 # myenv/
 
